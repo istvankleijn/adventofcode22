@@ -4,14 +4,7 @@ B X
 C Z
 """
 
-decrypt = {
-    "A": "Rock",
-    "B": "Paper",
-    "C": "Scissors",
-    "X": "Rock",
-    "Y": "Paper",
-    "Z": "Scissors",
-}
+
 choice_score = {
     "Rock": 1,
     "Paper": 2,
@@ -25,6 +18,14 @@ result_score = {
 
 
 def parse_line(line):
+    decrypt = {
+        "A": "Rock",
+        "B": "Paper",
+        "C": "Scissors",
+        "X": "Rock",
+        "Y": "Paper",
+        "Z": "Scissors",
+    }
     choices = line.split(" ")
     opponent, me = tuple(decrypt[choice] for choice in choices)
     return opponent, me
@@ -33,17 +34,19 @@ def parse_line(line):
 assert parse_line("A Y") == ("Rock", "Paper")
 
 
+losses = (
+    ("Rock", "Scissors"),
+    ("Scissors", "Paper"),
+    ("Paper", "Rock"),
+)
+wins = (
+    ("Rock", "Paper"),
+    ("Scissors", "Rock"),
+    ("Paper", "Scissors"),
+)
+
+
 def result(opponent, me):
-    losses = (
-        ("Rock", "Scissors"),
-        ("Scissors", "Paper"),
-        ("Paper", "Rock"),
-    )
-    wins = (
-        ("Rock", "Paper"),
-        ("Scissors", "Rock"),
-        ("Paper", "Scissors"),
-    )
     if opponent == me:
         return "draw"
     elif (opponent, me) in wins:
@@ -65,16 +68,44 @@ def score(opponent, me):
 assert score("Rock", "Paper") == 8
 
 
-def total_score(text):
+def total_score(text, parser):
     lines = text.strip().split("\n")
-    scores = [score(*parse_line(line)) for line in lines]
+    scores = [score(*parser(line)) for line in lines]
     return sum(scores)
 
 
-assert total_score(test_input) == 15
+assert total_score(test_input, parser=parse_line) == 15
+
+wins_dict = dict(wins)
+loss_dict = dict(losses)
+
+
+def parse_line2(line):
+    decrypt = {
+        "A": "Rock",
+        "B": "Paper",
+        "C": "Scissors",
+        "X": "loss",
+        "Y": "draw",
+        "Z": "win",
+    }
+    choices = line.split(" ")
+    opponent, goal = tuple(decrypt[choice] for choice in choices)
+
+    if goal == "draw":
+        me = opponent
+    elif goal == "win":
+        me = wins_dict[opponent]
+    elif goal == "loss":
+        me = loss_dict[opponent]
+
+    return opponent, me
+
+
+assert total_score(test_input, parser=parse_line2) == 12
 
 with open("./data/02-rock_paper_scissors.txt", "r", encoding="utf-8") as file:
     input = file.read()
 
-answer = total_score(input)
+answer = total_score(input, parse_line), total_score(input, parse_line2)
 print(answer)
