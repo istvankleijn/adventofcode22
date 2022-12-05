@@ -36,6 +36,9 @@ class Pair:
         shared = self.overlap()
         return shared == self.elf1 or shared == self.elf2
 
+    def has_overlap(self):
+        return True if self.overlap() != range(0) else False
+
 
 test_pairs = [Pair.from_string(line) for line in test_lines]
 
@@ -48,10 +51,10 @@ assert get_answer_1(test_pairs) == 2
 
 
 def get_answer_2(pairs):
-    pass
+    return sum(pair.has_overlap() for pair in pairs)
 
 
-assert get_answer_2(test_pairs) == None
+assert get_answer_2(test_pairs) == 4
 
 
 with open("./data/04-camp_cleanup.txt", "r", encoding="utf-8") as file:
