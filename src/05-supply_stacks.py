@@ -58,9 +58,21 @@ class Crates:
             to_stack.append(from_stack.pop())
         return self
 
+    def move_multiple(self, n, i, j):
+        from_stack = self.stacks[i]
+        to_stack = self.stacks[j]
+        crates_moved = from_stack[-n:]
+        del from_stack[-n:]
+        to_stack += crates_moved
+        return self
+
     def move(self, moves):
         for move in moves:
             self.move_one(*move)
+
+    def move9001(self, moves):
+        for move in moves:
+            self.move_multiple(*move)
 
     def read_top(self):
         return "".join(stack[-1] if stack != [] else "" for stack in self.stacks)
@@ -69,6 +81,11 @@ class Crates:
 test_crates = Crates(expected_start)
 test_crates.move(expected_moves)
 assert test_crates.read_top() == "CMZ"
+
+
+test_crates = Crates(expected_start)
+test_crates.move9001(expected_moves)
+assert test_crates.read_top() == "MCD"
 
 
 with open("./data/05-supply_stacks.txt", "r", encoding="utf-8") as file:
@@ -80,6 +97,8 @@ crates.move(moves)
 answer1 = crates.read_top()
 
 
-answer2 = None
+crates2 = Crates(start)
+crates2.move9001(moves)
+answer2 = crates2.read_top()
 
 print(answer1, answer2)
