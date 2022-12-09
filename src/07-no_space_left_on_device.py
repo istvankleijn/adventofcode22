@@ -82,13 +82,14 @@ class File:
 
 
 class Filesystem:
-    def __init__(self, files):
+    def __init__(self, files, total_size=70000000):
         self.files = sorted(set(files))
         self.directories = [
             file.path.removesuffix("/.")
             for file in self.files
             if file.path.endswith("/.")
         ]
+        self.total_size = total_size
 
     def __repr__(self):
         return f"Filesystem([{self.files}])"
@@ -123,6 +124,9 @@ class Filesystem:
                 small_dirs.append(dir)
         return total_size, small_dirs
 
+    def unused(self):
+        return self.total_size - self.size(File("/."))
+
 
 example_parsed = parse_terminal(example_terminal)
 
@@ -148,8 +152,9 @@ example_files = Filesystem(
 assert str(example_files) == str(example_parsed)
 assert example_files == example_parsed
 
-
 assert example_parsed.small_dirs() == (95437, ["/a", "/a/e"])
+
+assert example_parsed.unused() == 21618835
 
 with open("./data/07-no_space_left_on_device.txt", "r", encoding="utf-8") as handle:
     text = [line.rstrip() for line in handle.readlines()]
@@ -158,6 +163,19 @@ filesystem = parse_terminal(text)
 
 answer1 = filesystem.small_dirs()[0]
 
-answer2 = None
+
+def get_answer2(filesystem, size_required=30000000):
+    to_be_deleted = size_required - filesystem.unused()
+    possible_dirs = [
+        (file.path, filesystem.size(file))
+        for file in filesystem.files
+        if file.type == "dir" and filesystem.size(file) > to_be_deleted
+    ]
+    return min(possible_dirs, key=lambda x: x[1])[1]
+
+
+assert get_answer2(example_parsed) == 24933642
+
+answer2 = get_answer2(filesystem)
 
 print(answer1, answer2)
