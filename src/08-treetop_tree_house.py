@@ -1,5 +1,6 @@
+import functools
 import itertools
-
+import operator
 
 SHORTEST = 0
 TALLEST = 9
@@ -68,6 +69,87 @@ def get_answer1(a):
 
 assert get_answer1(example_heights) == 21
 
+
+def distance_right(a, i, j):
+    row = a[i]
+    distance = 0
+    height_own = row[j]
+    for height_other in row[j + 1 :]:
+        distance += 1
+        if height_other >= height_own:
+            break
+    return distance
+
+
+def distance_left(a, i, j):
+    if j == 0:
+        return 0
+    row = a[i]
+    distance = 0
+    height_own = row[j]
+    for height_other in row[j - 1 :: -1]:
+        distance += 1
+        if height_other >= height_own:
+            break
+    return distance
+
+
+def distance_down(a, i, j):
+    if i == len(a) - 1:
+        return 0
+    row = a[i]
+    distance = 0
+    height_own = row[j]
+    for other_row in a[i + 1 :]:
+        distance += 1
+        if other_row[j] >= height_own:
+            break
+    return distance
+
+
+def distance_up(a, i, j):
+    if i == 0:
+        return 0
+    row = a[i]
+    distance = 0
+    height_own = row[j]
+    for other_row in a[i - 1 :: -1]:
+        distance += 1
+        if other_row[j] >= height_own:
+            break
+    return distance
+
+
+def tree_scores(a):
+    scores = [[0 for x in row] for row in a]
+    for i, row in enumerate(a):
+        for j, height in enumerate(row):
+            distances = (
+                distance_right(a, i, j),
+                distance_left(a, i, j),
+                distance_down(a, i, j),
+                distance_up(a, i, j),
+            )
+            scores[i][j] = functools.reduce(operator.mul, distances, 1)
+    return scores
+
+
+assert tree_scores(example_heights) == [
+    [0, 0, 0, 0, 0],
+    [0, 1, 4, 1, 0],
+    [0, 6, 1, 2, 0],
+    [0, 1, 8, 3, 0],
+    [0, 0, 0, 0, 0],
+]
+
+
+def get_answer2(a):
+    return max(itertools.chain.from_iterable(tree_scores(a)))
+
+
+assert get_answer2(example_heights) == 8
+
+
 heights = []
 with open("./data/08-treetop_tree_house.txt", "r") as handle:
     for line in handle:
@@ -76,6 +158,6 @@ with open("./data/08-treetop_tree_house.txt", "r") as handle:
 
 answer1 = get_answer1(heights)
 
-answer2 = None
+answer2 = get_answer2(heights)
 
 print(answer1, answer2)
