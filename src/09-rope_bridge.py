@@ -5,18 +5,26 @@ XYCoordinates = collections.namedtuple("XYCoordinates", "x y")
 
 
 class RopeTrail:
-    def __init__(
-        self, head=XYCoordinates(0, 0), tail=XYCoordinates(0, 0), *, visited=None
-    ):
-        self.head = head
-        self.tail = tail
+    def __init__(self, rope=None, *, visited=None, rope_size=2):
+        if rope is None:
+            self.rope = [XYCoordinates(0, 0) for _ in range(rope_size)]
+        else:
+            self.rope = rope
         if visited is None:
-            self.visited = {tail}
+            self.visited = {self.tail}
         else:
             self.visited = visited
 
     def __repr__(self):
         return f"RopeTrail({self.head}, {self.tail}, visited={self.visited})"
+
+    @property
+    def head(self):
+        return self.rope[0]
+
+    @property
+    def tail(self):
+        return self.rope[-1]
 
     def move(self, direction, steps):
         for _ in range(steps):
