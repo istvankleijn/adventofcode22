@@ -48,10 +48,38 @@ def calculate_strengths(xs, observation_times):
         for i, (t_next, _) in enumerate(xs):
             _, x_prev = xs[i - 1]
             if t_next >= observation_time:
-                skip = i
                 break
         strengths.append(observation_time * x_prev)
     return strengths
+
+
+def sprite_positions(xs):
+    positions = []
+    i = 0
+    for cycle in range(xs[-1][0]):
+        current_reading = xs[i]
+        positions.append(current_reading[1])
+        try:
+            next_reading = xs[i + 1]
+        except IndexError:
+            break
+        finally:
+            if next_reading[0] <= cycle + 1:
+                i += 1
+    return positions
+
+
+def draw_image(sprite_pos, *, width=40, height=6):
+    out = ""
+    for i, s in enumerate(sprite_pos):
+        x = i % width
+        if x - 2 < s <= x + 1:
+            out += "#"
+        else:
+            out += "."
+        if x == width - 1:
+            out += "\n"
+    return out
 
 
 test_input = """addx 15
@@ -205,8 +233,23 @@ noop
 test_xs = parse_instructions(test_input)
 observe_at = range(20, 240, 40)
 test_strengths = calculate_strengths(test_xs, observe_at)
+test_image = draw_image(sprite_positions(test_xs))
+
+print(draw_image(sprite_positions(test_xs)))
+
 
 assert test_strengths == [420, 1140, 1800, 2940, 2880, 3960]
+
+assert (
+    test_image
+    == """##..##..##..##..##..##..##..##..##..##..
+###...###...###...###...###...###...###.
+####....####....####....####....####....
+#####.....#####.....#####.....#####.....
+######......######......######......####
+#######.......#######.......#######.....
+"""
+)
 
 
 with open("./data/10-cathode-ray_tube.txt", "r", encoding="utf-8") as handle:
@@ -215,12 +258,12 @@ with open("./data/10-cathode-ray_tube.txt", "r", encoding="utf-8") as handle:
 input = lines.strip().splitlines()
 xs = parse_instructions(input)
 
-print(xs)
+print(draw_image(sprite_positions(xs)))
 
 signal_strengths = calculate_strengths(xs, observe_at)
 
 answer1 = sum(signal_strengths)
 
-answer2 = None
+answer2 = "PZULBAUA"
 
 print(answer1, answer2)
