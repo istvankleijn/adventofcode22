@@ -1,5 +1,6 @@
 import collections
 import functools
+import math
 import operator
 
 
@@ -23,7 +24,10 @@ class Monkey:
         debug=False,
     ):
         self.items = collections.deque(items)
+        self.op = op
+        self.val = val
         self.operation = functools.partial(op, val)
+        self.test_divisor = test_divisor
         self.test = functools.partial(divides, test_divisor)
         if bored is None:
             self.bored = lambda x: x // 3
@@ -76,7 +80,7 @@ class MonkeyGame:
         return "\n".join(out)
 
     @classmethod
-    def from_text(cls, input, *, debug=False):
+    def from_text(cls, input, *, bored=None, debug=False):
         monkeys = []
         ontrue = dict()
         onfalse = dict()
@@ -121,10 +125,12 @@ class MonkeyGame:
                 case [str, *other]:
                     raise ValueError("Unexpected line data encountered.")
                 case []:
-                    monkeys.append(Monkey(items, op, val, test_divisor, debug=debug))
+                    monkeys.append(
+                        Monkey(items, op, val, test_divisor, bored=bored, debug=debug)
+                    )
                 case _:
                     raise ValueError("Unexpected line data encountered.")
-        monkeys.append(Monkey(items, op, val, test_divisor, debug=debug))
+        monkeys.append(Monkey(items, op, val, test_divisor, bored=bored, debug=debug))
         if debug:
             print("Creating Monkey")
         return cls(monkeys, ontrue, onfalse, debug=debug)
@@ -139,8 +145,10 @@ class MonkeyGame:
                     print(f"Item with worry level {item} thrown to monkey {throw_to}.")
                 self.monkeys[throw_to].items.append(item)
 
-    def play_rounds(self, n):
-        for _ in range(n):
+    def play_rounds(self, n, progress_every=100):
+        for i in range(n):
+            if i % progress_every == 0:
+                print(f"Playing round {i}.")
             self.play_round()
 
     def items_inspected(self):
@@ -155,9 +163,15 @@ class MonkeyGame:
         return ii[0][1] * ii[1][1]
 
 
-def get_answer1(monkeygame, n=20):
-    monkeygame.play_rounds(n)
-    return monkeygame.monkey_business()
+def manage_worry(mg):
+    bored_divisor = math.lcm(*(monkey.test_divisor for monkey in mg.monkeys))
+
+    def bored_function(x):
+        return x % bored_divisor
+
+    print(f"Managing worry with {bored_divisor=}.")
+    for monkey in mg.monkeys:
+        monkey.bored = bored_function
 
 
 m0 = Monkey([79, 98], operator.mul, 19, 23, debug=False)
@@ -206,6 +220,13 @@ print(test_game)
 assert str(test_game) == str(manual_test_game)
 assert test_game.monkey_business() == 10605
 
+
+test_game_2 = MonkeyGame.from_text(test_input, debug=False)
+manage_worry(test_game_2)
+test_game_2.play_rounds(10000)
+print(test_game_2)
+assert test_game_2.monkey_business() == 2713310158
+
 with open("./data/11-monkey_in_the_middle.txt", "r", encoding="utf-8") as handle:
     lines = handle.read()
 
@@ -215,6 +236,9 @@ game.play_rounds(20)
 
 answer1 = game.monkey_business()
 
-answer2 = None
+game2 = MonkeyGame.from_text(input)
+manage_worry(game2)
+game2.play_rounds(10000)
+answer2 = game2.monkey_business()
 
 print(answer1, answer2)
