@@ -1,3 +1,4 @@
+import itertools
 import string
 
 
@@ -39,8 +40,8 @@ class Hill:
         self.distances = [[-1 for _ in range(self.m)] for _ in range(self.n)]
 
         current_distance = 0
-        self.distances[self.y_beg][self.x_beg] = current_distance
-        previous_coords = {(self.x_beg, self.y_beg)}
+        self.distances[self.y_end][self.x_end] = current_distance
+        previous_coords = {(self.x_end, self.y_end)}
 
         while current_distance < self.m * self.n:
             current_distance += 1
@@ -60,7 +61,7 @@ class Hill:
                 for i_next, j_next in consider_next:
                     h = self.height(i_next, j_next)
                     d = self.distances[j_next][i_next]
-                    if d == -1 and h <= curr_height + 1:
+                    if d == -1 and h >= curr_height - 1:
                         next_coords.add((i_next, j_next))
 
             if len(next_coords) == 0:
@@ -74,12 +75,26 @@ class Hill:
             previous_coords = next_coords
 
     def S_to_E_distance(self):
-        return self.distances[self.y_end][self.x_end]
+        return self.distances[self.y_beg][self.x_beg]
 
 
 example_hill = Hill(example_input)
 example_hill.calculate_distances()
 assert example_hill.S_to_E_distance() == 31
+
+
+def min_distance_to_E(hill, from_height="a"):
+    return min(
+        distance
+        for distance, height in zip(
+            itertools.chain.from_iterable(hill.distances),
+            itertools.chain.from_iterable(hill.map),
+        )
+        if height == from_height and distance >= 0
+    )
+
+
+assert min_distance_to_E(example_hill, from_height="a") == 29
 
 
 with open("./data/12-hill_climbing_algorithm.txt", "r", encoding="utf-8") as handle:
@@ -91,6 +106,6 @@ hill.calculate_distances()
 
 answer1 = hill.S_to_E_distance()
 
-answer2 = None
+answer2 = min_distance_to_E(hill, from_height="a")
 
 print(answer1, answer2)
