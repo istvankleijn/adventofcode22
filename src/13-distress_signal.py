@@ -101,12 +101,53 @@ def get_answer1(input):
 assert get_answer1(test_input) == 13
 
 
+class Packet:
+    def __init__(self, string):
+        self.string = string
+        self.signal = eval(string)
+
+    def __repr__(self):
+        return f"Packet({self.string!r})"
+
+    def __str__(self):
+        return self.string
+
+    def __eq__(self, other):
+        return self.signal == other.signal
+
+    def __lt__(self, other):
+        return signals_ordered(self.signal, other.signal)
+
+
+divider_packets = [Packet("[[2]]"), Packet("[[6]]")]
+
+
+def ordered_with_dividers(input):
+    input_packets = [Packet(s) for s in input.split()]
+    return sorted(input_packets + divider_packets)
+
+
+logging.info("\n".join(str(packet) for packet in ordered_with_dividers(test_input)))
+
+
+def decoder_key(input):
+    divider_locations = [
+        i
+        for i, val in enumerate(ordered_with_dividers(input), start=1)
+        if val in divider_packets
+    ]
+    return divider_locations[0] * divider_locations[1]
+
+
+assert decoder_key(test_input) == 140
+
 with open("./data/13-distress_signal.txt", "r", encoding="utf-8") as handle:
     input = handle.read().strip()
 
 
 answer1 = get_answer1(input)
 
-answer2 = None
+
+answer2 = decoder_key(input)
 
 print(answer1, answer2)
